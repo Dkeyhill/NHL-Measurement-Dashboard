@@ -1,0 +1,4 @@
+snowflake-connector-python[pandas]>=3.12
+snowflake-snowpark-python>=1.35
+requests>=2.32
+python-dotenv>=1.0
