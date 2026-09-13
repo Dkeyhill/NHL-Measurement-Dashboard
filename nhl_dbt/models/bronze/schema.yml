@@ -1,0 +1,7 @@
+models:
+  - name: schedule
+    description: Bronze-layer flattened NHL schedule data, one row per game.
+    columns:
+      - name: game_id
+        tests:
+          - not_null

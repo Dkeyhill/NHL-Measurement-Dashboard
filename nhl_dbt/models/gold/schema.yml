@@ -1,0 +1,15 @@
+models:
+  - name: dim_game
+    description: Gold-layer game dimension, one row per game_id.
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+      - name: game_type
+        tests:
+          - accepted_values:
+              values: ['Preseason', 'Regular Season', 'Playoffs', 'Unknown']
+      - name: game_state
+        tests:
+          - accepted_values:
+              values: ['FUT', 'LIVE', 'OFF']

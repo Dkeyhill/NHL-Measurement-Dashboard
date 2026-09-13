@@ -1,0 +1,21 @@
+sources:
+  - name: raw
+    database: DEV
+    schema: RAW
+    tables:
+      - name: schedule
+        description: >
+          Raw, as-landed NHL schedule JSON, one row per weekly pull from
+          the /v1/schedule/{date} endpoint. Landed by Openflow.
+        columns:
+          - name: raw_json
+            description: Full JSON response from the NHL schedule API for one week.
+          - name: source_url
+            description: The exact API URL that was called to produce this row.
+          - name: loaded_at
+            description: Timestamp this row was inserted into RAW.SCHEDULE.
+        config:
+          loaded_at_field: loaded_at
+          freshness:
+            warn_after: {count: 26, period: hour}
+            error_after: {count: 48, period: hour}
