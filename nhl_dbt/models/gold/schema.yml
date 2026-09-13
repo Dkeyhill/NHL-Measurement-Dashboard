@@ -8,8 +8,10 @@ models:
       - name: game_type
         tests:
           - accepted_values:
-              values: ['Preseason', 'Regular Season', 'Playoffs', 'Unknown']
+              arguments:
+                values: ['Preseason', 'Regular Season', 'Playoffs', 'Unknown']
       - name: game_state
         tests:
           - accepted_values:
-              values: ['FUT', 'LIVE', 'OFF']
+              arguments:
+                values: ['FUT', 'LIVE', 'OFF']

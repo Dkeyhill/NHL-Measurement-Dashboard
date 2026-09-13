@@ -1,6 +1,6 @@
 sources:
   - name: raw
-    database: DEV
+    database: "{{ target.database }}"
     schema: RAW
     tables:
       - name: schedule
@@ -14,8 +14,8 @@ sources:
             description: The exact API URL that was called to produce this row.
           - name: loaded_at
             description: Timestamp this row was inserted into RAW.SCHEDULE.
+        loaded_at_field: loaded_at
         config:
-          loaded_at_field: loaded_at
           freshness:
             warn_after: {count: 26, period: hour}
             error_after: {count: 48, period: hour}
