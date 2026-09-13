@@ -15,14 +15,15 @@ worksheets — not in this repo.
 ## Project structure
 
 ```
-NHL-Measurement-Dashboard/
+NHL-Measurement-Dashboard/          ← repo root
+├── .github/
+│   └── workflows/
+│       ├── deploy_qat.yml
+│       └── deploy_prd.yml
 ├── nhl_dbt/
 │   ├── models/
-│   │   └── example/
 │   ├── dbt_project.yml
-│   ├── .gitignore
 │   └── ...
-├── requirements.txt
 ├── README.md
 └── .gitignore
 ```
