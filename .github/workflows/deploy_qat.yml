@@ -1,0 +1,93 @@
+# .github/workflows/deploy_qat.yml
+name: Deploy to QAT
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy-qat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install dbt-snowflake snowflake-connector-python cryptography
+
+      - name: Write private key from secret
+        run: echo "${{ secrets.SNOWFLAKE_CI_PRIVATE_KEY }}" | base64 -d > /tmp/ci_rsa_key.p8
+
+      - name: Write profiles.yml
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << EOF
+          nhl_dbt:
+            target: qat
+            outputs:
+              qat:
+                type: snowflake
+                account: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+                user: NHL_CI_CD_SVC
+                role: NHL_CI_CD
+                warehouse: NHL_ETL
+                database: QAT
+                schema: RAW
+                private_key_path: /tmp/ci_rsa_key.p8
+                threads: 4
+          EOF
+
+      - name: Sync all PRD raw tables into QAT raw
+        run: |
+          python - << 'EOF'
+          import os
+          import snowflake.connector
+          from cryptography.hazmat.primitives import serialization
+
+          with open("/tmp/ci_rsa_key.p8", "rb") as f:
+              p_key = serialization.load_pem_private_key(f.read(), password=None)
+          pkb = p_key.private_bytes(
+              encoding=serialization.Encoding.DER,
+              format=serialization.PrivateFormat.PKCS8,
+              encryption_algorithm=serialization.NoEncryption(),
+          )
+
+          conn = snowflake.connector.connect(
+              account=os.environ["SNOWFLAKE_ACCOUNT"],
+              user="NHL_CI_CD_SVC",
+              private_key=pkb,
+              role="NHL_CI_CD",
+              warehouse="NHL_ETL",
+              database="QAT",
+              schema="RAW",
+          )
+          cur = conn.cursor()
+
+          cur.execute("""
+              SELECT table_name
+              FROM PRD.INFORMATION_SCHEMA.TABLES
+              WHERE table_schema = 'RAW'
+                AND table_type = 'BASE TABLE'
+          """)
+          tables = [row[0] for row in cur.fetchall()]
+
+          for table in tables:
+              print(f"Syncing {table}...")
+              cur.execute(f"TRUNCATE TABLE QAT.RAW.{table}")
+              cur.execute(f"""
+                  INSERT INTO QAT.RAW.{table}
+                  SELECT * FROM PRD.RAW.{table}
+              """)
+
+          conn.close()
+          print(f"Synced {len(tables)} table(s) from PRD.RAW into QAT.RAW.")
+          EOF
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+
+      - name: dbt build in QAT (full refresh)
+        working-directory: nhl_dbt
+        run: dbt build --target qat --full-refresh

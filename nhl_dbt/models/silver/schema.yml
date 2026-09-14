@@ -1,0 +1,17 @@
+models:
+  - name: stg_schedule
+    description: Silver-layer deduplicated schedule, one row per game_id.
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+      - name: game_type
+        tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3]
+      - name: game_state
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['FUT', 'LIVE', 'OFF']

@@ -1,0 +1,46 @@
+# .github/workflows/deploy_prd.yml
+name: Deploy to PRD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-prd:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt
+        run: pip install dbt-snowflake
+
+      - name: Write private key from secret
+        run: echo "${{ secrets.SNOWFLAKE_CI_PRIVATE_KEY }}" | base64 -d > /tmp/ci_rsa_key.p8
+
+      - name: Write profiles.yml
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << EOF
+          nhl_dbt:
+            target: prd
+            outputs:
+              prd:
+                type: snowflake
+                account: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+                user: NHL_CI_CD_SVC
+                role: NHL_CI_CD
+                warehouse: NHL_ETL
+                database: PRD
+                schema: RAW
+                private_key_path: /tmp/ci_rsa_key.p8
+                threads: 4
+          EOF
+
+      - name: dbt build in PRD
+        working-directory: nhl_dbt
+        run: dbt build --target prd
