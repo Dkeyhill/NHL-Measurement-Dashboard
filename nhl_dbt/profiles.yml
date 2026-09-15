@@ -1,0 +1,17 @@
+nhl_dbt:
+  target: prd
+  outputs:
+    prd:
+      type: snowflake
+      role: NHL_CI_CD
+      warehouse: NHL_ETL
+      database: PRD
+      schema: RAW
+      threads: 1
+    qat:
+      type: snowflake
+      role: NHL_CI_CD
+      warehouse: NHL_ETL
+      database: QAT
+      schema: RAW
+      threads: 1

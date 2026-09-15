@@ -43,4 +43,4 @@ jobs:
 
       - name: dbt build in PRD
         working-directory: nhl_dbt
-        run: dbt build --target prd
+        run: dbt build --target prd --profiles-dir ~/.dbt

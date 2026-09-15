@@ -90,4 +90,4 @@ jobs:
 
       - name: dbt build in QAT (full refresh)
         working-directory: nhl_dbt
-        run: dbt build --target qat --full-refresh
+        run: dbt build --target qat --full-refresh --profiles-dir ~/.dbt
